@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IncomeFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  IRREGULAR
+  CUSTOM
+}
+
+enum TransactionFrequency {
+  ONCE
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum DebtType {
+  THEY_OWE_ME
+  I_OWE_THEM
+}
+
+enum DebtStatus {
+  ACTIVE
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum DebtPaymentDirection {
+  PAID_BY_ME
+  PAID_TO_ME
+}
+
+model User {
+  id                    String                  @id @default(cuid())
+  name                  String
+  email                 String                  @unique
+  passwordHash          String
+  emailVerifiedAt       DateTime?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  profile               UserProfile?
+  incomes               Income[]
+  expenses              Expense[]
+  subscriptions         Subscription[]
+  debts                 Debt[]
+  debtPayments          DebtPayment[]
+  monthlyPlans          MonthlyPlan[]
+  balanceAdjustments    BalanceAdjustment[]
+  refreshTokens         RefreshToken[]
+  emailVerificationCode EmailVerificationCode[]
+}
+
+model UserProfile {
+  id                   String          @id @default(cuid())
+  userId               String          @unique
+  mainCurrency         String
+  startingBalance      Decimal         @db.Decimal(14, 2)
+  incomeFrequency      IncomeFrequency
+  expectedIncomeAmount Decimal?        @db.Decimal(14, 2)
+  salaryDay            Int?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailVerificationCode {
+  id           String    @id @default(cuid())
+  userId       String
+  codeHash     String
+  expiresAt    DateTime
+  attemptCount Int       @default(0)
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Income {
+  id              String               @id @default(cuid())
+  userId          String
+  amount          Decimal              @db.Decimal(14, 2)
+  currency        String
+  exchangeRate    Decimal              @db.Decimal(18, 8)
+  convertedAmount Decimal              @db.Decimal(14, 2)
+  source          String
+  category        String
+  date            DateTime
+  frequency       TransactionFrequency @default(ONCE)
+  isRecurring     Boolean              @default(false)
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id              String               @id @default(cuid())
+  userId          String
+  amount          Decimal              @db.Decimal(14, 2)
+  currency        String
+  exchangeRate    Decimal              @db.Decimal(18, 8)
+  convertedAmount Decimal              @db.Decimal(14, 2)
+  category        String
+  date            DateTime
+  frequency       TransactionFrequency @default(ONCE)
+  isRecurring     Boolean              @default(false)
+  paymentMethod   String?
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id              String               @id @default(cuid())
+  userId          String
+  name            String
+  amount          Decimal              @db.Decimal(14, 2)
+  currency        String
+  exchangeRate    Decimal              @db.Decimal(18, 8)
+  convertedAmount Decimal              @db.Decimal(14, 2)
+  billingCycle    TransactionFrequency
+  nextPaymentDate DateTime
+  category        String
+  status          SubscriptionStatus   @default(ACTIVE)
+  notes           String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Debt {
+  id                      String        @id @default(cuid())
+  userId                  String
+  personName              String
+  type                    DebtType
+  originalAmount          Decimal       @db.Decimal(14, 2)
+  currency                String
+  exchangeRate            Decimal       @db.Decimal(18, 8)
+  convertedOriginalAmount Decimal       @db.Decimal(14, 2)
+  paidAmount              Decimal       @default(0) @db.Decimal(14, 2)
+  remainingAmount         Decimal       @db.Decimal(14, 2)
+  deadline                DateTime?
+  paymentPlan             String?
+  status                  DebtStatus    @default(ACTIVE)
+  notes                   String?
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payments                DebtPayment[]
+}
+
+model DebtPayment {
+  id              String               @id @default(cuid())
+  debtId          String
+  userId          String
+  amount          Decimal              @db.Decimal(14, 2)
+  currency        String
+  exchangeRate    Decimal              @db.Decimal(18, 8)
+  convertedAmount Decimal              @db.Decimal(14, 2)
+  paymentDate     DateTime
+  direction       DebtPaymentDirection
+  notes           String?
+  createdAt       DateTime             @default(now())
+  debt            Debt                 @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MonthlyPlan {
+  id                       String   @id @default(cuid())
+  userId                   String
+  month                    Int
+  year                     Int
+  expectedIncome           Decimal  @db.Decimal(14, 2)
+  plannedExpenses          Decimal  @db.Decimal(14, 2)
+  plannedSubscriptions     Decimal  @db.Decimal(14, 2)
+  plannedDebtPayments      Decimal  @db.Decimal(14, 2)
+  savingsGoal              Decimal  @db.Decimal(14, 2)
+  emergencyFundGoal        Decimal  @db.Decimal(14, 2)
+  notes                    String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month, year])
+}
+
+model BalanceAdjustment {
+  id              String   @id @default(cuid())
+  userId          String
+  amount          Decimal  @db.Decimal(14, 2)
+  currency        String
+  exchangeRate    Decimal  @db.Decimal(18, 8)
+  convertedAmount Decimal  @db.Decimal(14, 2)
+  reason          String
+  date            DateTime
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CurrencyRate {
+  id             String   @id @default(cuid())
+  baseCurrency   String
+  targetCurrency String
+  rate           Decimal  @db.Decimal(18, 8)
+  provider       String
+  fetchedAt      DateTime @default(now())
+
+  @@index([baseCurrency, targetCurrency])
+}
