@@ -15,10 +15,5 @@
       "dest": "api/index.ts"
     }
   ],
-  "functions": {
-    "api/index.ts": {
-      "maxDuration": 30
-    }
-  },
   "buildCommand": "npx prisma generate"
 }
