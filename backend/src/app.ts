@@ -15,6 +15,7 @@ import { profileRouter } from "./routes/profile";
 import { reportsRouter } from "./routes/reports";
 import { subscriptionsRouter } from "./routes/subscriptions";
 import { errorHandler } from "./middleware/errorHandler";
+import { apiLimiter, authLimiter } from "./middleware/rateLimit";
 
 export const app = express();
 
@@ -27,9 +28,10 @@ app.use(
 );
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
+app.use("/api", apiLimiter);
 
 app.use("/api/health", healthRouter);
-app.use("/api/auth", authRouter);
+app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/currency", currencyRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/reports", reportsRouter);

@@ -1,12 +1,14 @@
 import { Router } from "express";
 import { z } from "zod";
 import { authenticate, type AuthenticatedRequest } from "../middleware/authenticate";
+import { aiLimiter } from "../middleware/rateLimit";
 import { askFinanceAssistant, isAiConfigured } from "../services/aiService";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const aiRouter = Router();
 
 aiRouter.use(authenticate);
+aiRouter.use(aiLimiter);
 
 aiRouter.get(
   "/config",

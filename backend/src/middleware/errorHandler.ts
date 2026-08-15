@@ -11,6 +11,10 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
 
   const status = typeof error.status === "number" ? error.status : 500;
 
+  if (status >= 500) {
+    console.error(error);
+  }
+
   return res.status(status).json({
     message: error.message || "Internal server error",
   });
