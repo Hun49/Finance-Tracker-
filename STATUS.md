@@ -20,23 +20,23 @@ _Last updated: this session_
 
 ## Local run
 
-- Start DB: `docker start finance-postgres` (or use Neon URL in `backend/.env`)
-- From project root: `npm run dev` → frontend `:3000`, backend `:4000`
-- Backend reads `.env`; frontend reads `.env.local` (`NEXT_PUBLIC_API_URL` blank = auto-target same host :4000)
+- From project root: `npm run dev` → frontend `:3000`, backend `:4000`.
+- Backend reads `.env` (Neon pooled URL); frontend reads `.env.local`.
 
-## Deployment
+## Deployment (Vercel, live)
 
-- Repo: `github.com/Hun49/Finance-Tracker-` (secrets excluded via .gitignore).
-- Backend deploy: Vercel, Root Directory `backend`, preset `Service`, Build `npx prisma generate`.
+- Repo: `github.com/Hun49/Finance-Tracker-` (secrets excluded via .gitignore). `STATUS.md` included.
+- **Frontend (LIVE):** `https://finance-tracker-dem.vercel.app`
+  - Root Directory `frontend`, preset Next.js, env `NEXT_PUBLIC_API_URL`.
+- **Backend (DEPLOYED, CRASHING → needs redeploy):** `https://finance-tracker-api-pied.vercel.app`
+  - Root Directory `backend`, preset Service, Build `npx prisma generate`.
+  - Crash cause fixed: `@prisma/adapter-pg` was v7 vs `@prisma/client` v6 → pinned adapter to `6.19.3`, pushed as `20d9cf0`, verified locally (health + login OK).
   - Env: `DATABASE_URL` (Neon pooled), `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `NODE_ENV=production`.
-- Frontend deploy: Vercel, Root Directory `frontend`, preset `Next.js`.
-  - Env: `NEXT_PUBLIC_API_URL` = backend URL + `/api`.
-- Render was skipped (requires card). Two separate Vercel projects is the plan.
+  - **Must add now:** `FRONTEND_URL = https://finance-tracker-dem.vercel.app` (CORS) then Redeploy.
 
 ## Next steps
 
-1. Press Deploy on Vercel (backend), then paste the `.vercel.app` URL here.
-2. Deploy frontend, point `NEXT_PUBLIC_API_URL` at backend.
-3. Set `FRONTEND_URL` on backend to frontend URL.
-4. Resend email (verification codes) via a domain.
-5. Ongoing: security/UX/performance polish.
+1. Add `FRONTEND_URL` env var to backend on Vercel → Redeploy (`20d9cf0`). ← IN PROGRESS
+2. Re-test live register/login; confirm account creation works.
+3. Resend email (verification codes) via a domain.
+4. Ongoing: security/UX/performance polish.
