@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import { Field, PrimaryButton, SelectInput, TextInput } from "../../../components/ui";
+import { ConfirmButton } from "../../../components/confirm-button";
 import { supportedCurrencies } from "../../../lib/currencies";
 import { api, jsonPatch, jsonPost } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth";
@@ -279,9 +280,12 @@ export default function SubscriptionsPage() {
                   <button onClick={() => startEdit(subscription)} className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-600 dark:text-blue-300">
                     Edit
                   </button>
-                  <button onClick={() => deleteMutation.mutate(subscription.id)} title="Delete" className="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-600 dark:text-rose-300">
-                    Delete
-                  </button>
+                  <ConfirmButton
+                    onConfirm={() => deleteMutation.mutate(subscription.id)}
+                    busy={deleteMutation.isPending}
+                    title="Delete subscription"
+                    className="rounded-full bg-rose-500/10 px-3 py-1 text-xs font-bold text-rose-600 dark:text-rose-300"
+                  />
                 </div>
               </div>
             ))}

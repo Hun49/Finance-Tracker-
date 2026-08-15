@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useState } from "react";
 import { TransactionForm, type TransactionFormData } from "../../../components/transaction-form";
+import { ConfirmButton } from "../../../components/confirm-button";
 import { api, jsonPatch, jsonPost } from "../../../lib/api";
 import { useAuth } from "../../../lib/auth";
 
@@ -191,13 +192,11 @@ export default function ExpensesPage() {
                   >
                     Edit
                   </button>
-                  <button
-                    onClick={() => deleteMutation.mutate(expense.id)}
-                    title="Delete"
-                    className="rounded-full bg-rose-500/10 px-3 py-1.5 text-sm font-bold text-rose-600 opacity-0 transition group-hover:opacity-100 dark:text-rose-300"
-                  >
-                    ✕
-                  </button>
+                  <ConfirmButton
+                    onConfirm={() => deleteMutation.mutate(expense.id)}
+                    busy={deleteMutation.isPending}
+                    className="rounded-full bg-rose-500/10 px-3 py-1.5 text-sm font-bold text-rose-600 opacity-0 transition group-hover:opacity-100 dark:bg-rose-500/10 dark:text-rose-300"
+                  />
                 </div>
               </div>
             ))}
